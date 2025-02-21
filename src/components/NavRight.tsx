@@ -5,9 +5,13 @@ import Link from 'next/link';
 
 interface NavRightProps {
     toggleNavGroup: () => void;
+    toggleNavFriend: () => void;
+    toggleWelcome: () => void;
 }
 
-const NavRight: React.FC<NavRightProps> = ({ toggleNavGroup }) => {
+
+
+const NavRight: React.FC<NavRightProps> = ({ toggleNavGroup, toggleNavFriend,toggleWelcome }) => {
     return (
         <nav className="fixed right-0 top-0 h-screen bg-[#201E43] text-white w-16 flex flex-col items-center py-4 border-2 border-[#EEEEEE] ">
             <ul className="flex flex-col items-center justify-between h-full">
@@ -21,6 +25,7 @@ const NavRight: React.FC<NavRightProps> = ({ toggleNavGroup }) => {
                                 height={24}
                                 priority={true}
                                 className="invert-[85%] group-hover:scale-110 transition-transform"
+                                onClick={toggleWelcome}
                             />
                         </Link>
                     </li>
@@ -44,6 +49,7 @@ const NavRight: React.FC<NavRightProps> = ({ toggleNavGroup }) => {
                                 width={24}
                                 height={24}
                                 className="invert-[85%] group-hover:scale-110 transition-transform"
+                                onClick={() => toggleNavFriend()}
                             />
                         </Link>
                     </li>

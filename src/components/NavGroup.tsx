@@ -2,7 +2,12 @@ import React from 'react';
 import Link from "next/link";
 import Image from "next/image";
 
-function NavGroup() {
+interface CreateNewGroupProps {
+    toggleCreateNewGroup: () => void;
+}
+
+
+const NavGroup: React.FC<CreateNewGroupProps> = ({toggleCreateNewGroup}) => {
     return (
         <div className="w-72 bg-[#201E43] shadow-lg fixed top-0 right-16 h-screen border border-[#EEEEEE] p-4 animate-slideIn flex flex-col">
             <div className={"flex item-center justify-center space-x-2 me-2"}>
@@ -95,21 +100,23 @@ function NavGroup() {
                     </div>
                 </li>
             </ul>
-            <div className="flex flex-row items-center justify-center mb-40 opacity-20 ">
+            <div className="absolute inset-0 flex flex-row items-center justify-center mb-auto opacity-20 -z-20">
                 <Image
                     src="/icons/logo.svg"
                     alt="home"
                     width={44}
                     height={44}
                     priority={true}
-                    className="group-hover:scale-110 transition-transform"
+                    className="group-hover:scale-110 transition-transform "
                 />
-                <h1 className="text-text text-3xl font-bold ps-3">The Baze</h1>
+                <h1 className="text-text text-3xl font-bold ps-3 -z-10">The Baze</h1>
             </div>
 
 
+
             <div className="mt-auto text-center">
-                <Link href="">
+
+                <Link href={""} onClick={() => toggleCreateNewGroup()}>
                     <p className="px-6 py-2 bg-text text-first rounded-lg hover:bg-second hover:text-text focus:outline-none focus:ring-2 focus:ring-second text-start">
                         Create New Group
                     </p>

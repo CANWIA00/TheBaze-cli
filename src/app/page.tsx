@@ -1,32 +1,21 @@
 "use client";
 
-import Image from "next/image";
-import NavRight from "@/components/NavRight";
-import NavGroup from "@/components/NavGroup";
 import React, { useState } from "react";
+import SideBarLayout from "../components/SideBarLayout";
+import Welcome from "../components/welcome/Welcome";
+import CreateNewGroup from "../components/CreateNewGroup";
+import InviteToGroup from "../components/InviteToGroup";
 
 export default function Home() {
-    const [isNavGroupVisible, setNavGroupVisible] = useState(false);
-
-
-    const toggleNavGroup = () => {
-        setNavGroupVisible((prev) => !prev);
-    };
+    const [activeComponent, setActiveComponent] = useState<'welcome' | 'createGroup' | 'inviteGroup'>('welcome');
 
     return (
-        <div className="min-h-screen flex flex-col">
-            <div className="bg-[#201E43] flex justify-center items-center flex-grow">
-                <h1 className="text-6xl pe-3">Welcome to</h1>
-                <Image src="/icons/logo.svg" alt="TheBaze" width={66} height={66} />
-                <h1 className="text-6xl ps-3 font-bold">The Baze</h1>
-            </div>
-
-            <div className="fixed right-0 top-0 h-screen flex items-center">
-                <div className="p-4 bg-[#201E43] h-screen flex items-center">
-                    {isNavGroupVisible && <NavGroup />}
-                </div>
-                <NavRight toggleNavGroup={toggleNavGroup} />
-            </div>
-        </div>
+        <SideBarLayout activeComponent={activeComponent} setActiveComponent={setActiveComponent}>
+            {activeComponent === 'welcome' && <Welcome />}
+            {activeComponent === 'createGroup' && (
+                <CreateNewGroup toggleCreateNewGroup={() => setActiveComponent('welcome')} toggleInviteToGroup={() => setActiveComponent('inviteGroup')} />
+            )}
+            {activeComponent === 'inviteGroup' && <InviteToGroup closeInviteGroup={() => setActiveComponent('welcome')} />}
+        </SideBarLayout>
     );
 }
