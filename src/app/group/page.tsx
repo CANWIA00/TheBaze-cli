@@ -7,6 +7,7 @@ import NavGroupLeft from "@/components/group/NavGroupLeft";
 import GroupChannels from "@/components/group/GroupChannels";
 import SendMessage from "@/components/group/SendMessage";
 import Header from "@/components/group/Header";
+import Message from "@/components/group/Message";
 
 function Group() {
     const [activeComponent, setActiveComponent] = useState<'welcome' | 'createGroup' | 'inviteGroup'>('welcome');
@@ -24,6 +25,32 @@ function Group() {
 
             <div className="col-span-8 row-span-10 col-start-4 row-start-1 ">
                 <Header />
+                <ul >
+                    <li className={"my-4"}>
+                        <Message/>
+                    </li>
+                    <li className={"my-4"}>
+                        <Message/>
+                        <ul>
+                            <li>
+                                <Image
+                                    src="/icons/arrow-forward.svg"
+                                    alt="share"
+                                    width={24}
+                                    height={24}
+                                    priority={true}
+                                    className="group-hover:scale-110 transition-transform"/>
+                            </li>
+                            <li className={" ms-16 mt-2"}>
+                                <Message/>
+                            </li>
+                        </ul>
+                    </li>
+                    <li className={"my-4"}>
+                        <Message/>
+                    </li>
+                </ul>
+
             </div>
 
             <div className="col-span-8 col-start-4 row-start-12 ">

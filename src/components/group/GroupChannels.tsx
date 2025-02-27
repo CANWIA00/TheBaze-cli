@@ -1,6 +1,5 @@
 import React from 'react';
 import Image from "next/image";
-import Link from 'next/link';
 import TextChannelList from '@/components/group/TextChannelList';
 import VoiceChannelList from '@/components/group/VoiceChannelList';
 

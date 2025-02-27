@@ -8,6 +8,9 @@ export default {
   ],
   theme: {
     extend: {
+      transformStyle: {
+        'preserve-3d': 'preserve-3d',
+      },
       keyframes: {
         slideIn: {
           '0%': { transform: 'translateX(100%)' },
