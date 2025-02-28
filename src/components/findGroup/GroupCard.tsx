@@ -4,7 +4,7 @@ import Link from "next/link";
 
 const GroupCard: React.FC = () => {
     return (
-        <div className="group w-58 h-40 [perspective:1000px]">
+        <div className="group w-full h-40 [perspective:1000px]">
             <div className="relative w-full h-full transition-transform duration-500 [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)]">
                 {/* Front Side */}
                 <div

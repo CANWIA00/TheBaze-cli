@@ -14,7 +14,7 @@ function Page() {
                 <SideBarLayout activeComponent={activeComponent} setActiveComponent={setActiveComponent} />
             </div>
 
-            <div className="col-span-12 row-span-12 col-start-1 row-start-1 mt-5 px-4 py-5">
+            <div className="col-span-11 row-span-12 col-start-2 row-start-1 mt-5 px-4 py-5">
                 <h1 className="text-4xl font-bold text-white">Find Group</h1>
                 <div className="mt-5">
                     <h2 className="text-white text-lg">Search a Group</h2>
@@ -33,29 +33,31 @@ function Page() {
                     </div>
                     <hr className="my-4 border-gray-300" />
                 </div>
-                <div className="mt-5">
-                    <ul className="grid grid-cols-4 gap-6">
-                        {/* List Items */}
-                        <li>
+                <div className="mt-5 px-4">
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full max-w-6xl ">
+                        <li className="flex justify-center">
                             <GroupCard />
                         </li>
-                        <li>
+                        <li className="flex justify-center">
                             <GroupCard />
                         </li>
-                        <li>
+                        <li className="flex justify-center">
                             <GroupCard />
                         </li>
-                        <li>
+                        <li className="flex justify-center">
                             <GroupCard />
                         </li>
-                        <li>
+                        <li className="flex justify-center">
                             <GroupCard />
                         </li>
-                        <li>
+                        <li className="flex justify-center">
                             <GroupCard />
                         </li>
                     </ul>
                 </div>
+
+
+
             </div>
         </div>
     );
