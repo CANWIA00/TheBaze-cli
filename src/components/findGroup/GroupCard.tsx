@@ -6,7 +6,6 @@ const GroupCard: React.FC = () => {
     return (
         <div className="group w-full h-40 [perspective:1000px]">
             <div className="relative w-full h-full transition-transform duration-500 [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)]">
-                {/* Front Side */}
                 <div
                     className="absolute w-full h-full  border border-gray-300 rounded-lg shadow-lg p-4 flex flex-col items-center justify-center [backface-visibility:hidden]"
                 >
@@ -21,7 +20,6 @@ const GroupCard: React.FC = () => {
 
                 </div>
 
-                {/* Back Side */}
                 <div
                     className="absolute w-full h-full bg-gray-800 text-white rounded-lg shadow-lg p-4 flex flex-col items-center justify-center [backface-visibility:hidden] [transform:rotateY(180deg)]"
                 >

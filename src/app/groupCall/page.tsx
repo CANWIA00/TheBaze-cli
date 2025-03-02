@@ -12,6 +12,24 @@ function Page() {
     const [activeComponent, setActiveComponent] = useState<'welcome' | 'createGroup' | 'inviteGroup'>('welcome');
     const [users, setUsers] = useState(Array(6).fill(null)); // Placeholder for user list
 
+    // Function to determine grid layout based on participant count
+    const getGridLayout = (participantCount: number) => {
+        if (participantCount === 1) return "grid-cols-1";
+        if (participantCount === 2) return "grid-cols-2";
+        if (participantCount === 3 || participantCount === 4) return "grid-cols-2";
+        if (participantCount <= 6) return "grid-cols-3";
+        if (participantCount <= 8) return "grid-cols-4";
+        return "grid-cols-4"; // Default for larger numbers
+    };
+
+    // Function to determine item span based on participant count
+    const getItemSpan = (index: number, total: number) => {
+        if (total === 1) return "col-span-1";
+        if (total === 2) return "col-span-1";
+        if (total === 3 && index === 0) return "col-span-2";
+        return "col-span-1";
+    };
+
     return (
         <div className="grid grid-cols-12 grid-rows-12 gap-0 bg-first h-screen">
             {/* Sidebar */}
@@ -33,16 +51,11 @@ function Page() {
                 </div>
 
                 {/* Dynamic Camera Grid */}
-                <div className="flex-1 overflow-y-auto p-4 bg-gray-900 grid gap-4"
-                     style={{
-                         display: "grid",
-                         gridTemplateColumns: `repeat(auto-fit, minmax(${Math.max(200, 1000 / users.length)}px, 1fr))`,
-                         justifyContent: "center",
-                         alignContent: "center",
-                     }}
-                >
+                <div className={`flex-1 p-4 bg-gray-900 grid gap-4 h-full ${getGridLayout(users.length)}`}>
                     {users.map((_, index) => (
-                        <Camera key={index} />
+                        <div key={index} className={getItemSpan(index, users.length)}>
+                            <Camera />
+                        </div>
                     ))}
                 </div>
 
