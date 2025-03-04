@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import SideBarLayout from '@/components/SideBarLayout';
-import GroupDetails from '@/components/findGroup/GroupDetails';
 import Image from 'next/image';
 import GroupCard from '@/components/findGroup/GroupCard';
 

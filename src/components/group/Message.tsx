@@ -29,8 +29,8 @@ function Message() {
                         <Image
                             src="/icons/heart.svg"
                             alt="like"
-                            width={24}
-                            height={24}
+                            width={16}
+                            height={16}
                             priority={true}
                             className="group-hover:scale-110 transition-transform"/>
                     </button>
@@ -38,8 +38,8 @@ function Message() {
                         <Image
                             src="/icons/message-dots.svg"
                             alt="comment"
-                            width={24}
-                            height={24}
+                            width={18}
+                            height={18}
                             priority={true}
                             className="group-hover:scale-110 transition-transform"/>
                     </button>
@@ -47,8 +47,8 @@ function Message() {
                         <Image
                             src="/icons/arrow-forward.svg"
                             alt="share"
-                            width={24}
-                            height={24}
+                            width={18}
+                            height={18}
                             priority={true}
                             className="group-hover:scale-110 transition-transform"/>
                     </button>

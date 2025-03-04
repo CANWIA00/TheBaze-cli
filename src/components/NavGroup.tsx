@@ -122,7 +122,7 @@ const NavGroup: React.FC<CreateNewGroupProps> = ({toggleCreateNewGroup}) => {
                     </p>
                 </Link>
                 <span>or</span>
-                <Link href="">
+                <Link href="/findGroup">
                     <p className="px-6 py-2 border rounded-lg hover:bg-second hover:text-text focus:outline-none focus:ring-2 focus:ring-second flex flex-row items-center justify-center w-full">
                         <span className={"text-center"}>Find Group</span>
                         <Image

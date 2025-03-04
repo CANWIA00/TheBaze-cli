@@ -3,13 +3,12 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import SideBarLayout from "../../components/SideBarLayout";
-import NavGroupLeft from "@/components/group/NavGroupLeft";
-import GroupChannels from "@/components/group/GroupChannels";
 import SendMessage from "@/components/group/SendMessage";
-import Header from "@/components/group/Header";
+import Header from "@/components/user/Header";
 import Message from "@/components/group/Message";
 
-function Group() {
+
+function Page() {
     const [activeComponent, setActiveComponent] = useState<'welcome' | 'createGroup' | 'inviteGroup'>('welcome');
 
     return (
@@ -17,18 +16,10 @@ function Group() {
             <div className="row-span-12 col-start-12 row-start-1 z-50">
                 <SideBarLayout activeComponent={activeComponent} setActiveComponent={setActiveComponent} />
             </div>
-
-            <div className="flex col-span-3 row-span-12 col-start-1 row-start-1 z-50">
-                <NavGroupLeft />
-                <GroupChannels />
-            </div>
-
-            <div className="col-span-8 row-span-12 col-start-4 row-start-1 flex flex-col h-full">
+            <div className="col-span-8 row-span-12 col-start-3   row-start-1 flex flex-col h-full">
                 <div className="sticky top-0 bg-first z-20 ">
                     <Header />
                 </div>
-
-                {/* The message section is the scrollable part */}
                 <div className="flex-1 p-4 grid gap-4 h-full overflow-y-auto">
                     <ul>
                         <li className="my-4">
@@ -58,7 +49,7 @@ function Group() {
                     </ul>
                 </div>
 
-                <div className="sticky py-1 bottom-0 bg-first z-20 shadow-md">
+                <div className="sticky py-4 bottom-0 bg-first z-20 shadow-md">
                     <SendMessage />
                 </div>
             </div>
@@ -66,4 +57,4 @@ function Group() {
     );
 }
 
-export default Group;
+export default Page;

@@ -3,8 +3,12 @@ import NavRight from '@/components/NavRight';
 import NavGroup from '@/components/NavGroup';
 import NavFriend from '@/components/NavFriend';
 
-function SideBarLayout({ children, setActiveComponent }: {
-    children: React.ReactNode;
+function SideBarLayout({
+                           children,
+                           setActiveComponent,
+                           activeComponent,
+                       }: {
+    children?: React.ReactNode; // Make children optional
     activeComponent: 'welcome' | 'createGroup' | 'inviteGroup';
     setActiveComponent: (component: 'welcome' | 'createGroup' | 'inviteGroup') => void;
 }) {
@@ -17,7 +21,7 @@ function SideBarLayout({ children, setActiveComponent }: {
         <div className="min-h-screen flex flex-col bg-[#201E43]">
             {/****** Main Section *******/}
             <section id="main-container" className="flex justify-center items-center flex-grow">
-                {children}
+                {children} {/* Render children if available */}
             </section>
 
             {/****** Right Sidebar ******/}
