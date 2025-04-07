@@ -7,11 +7,14 @@ interface NavRightProps {
     toggleNavGroup: () => void;
     toggleNavFriend: () => void;
     toggleWelcome: () => void;
+    toggleProfile: () => void;
+    toggleNotification: () => void;
+    toggleMessage: () => void;
 }
 
 
 
-const NavRight: React.FC<NavRightProps> = ({ toggleNavGroup, toggleNavFriend,toggleWelcome }) => {
+const NavRight: React.FC<NavRightProps> = ({ toggleNavGroup, toggleNavFriend,toggleWelcome, toggleProfile, toggleNotification, toggleMessage }) => {
     return (
         <nav className="fixed right-0 top-0 h-screen bg-[#201E43] text-white w-16 flex flex-col items-center py-4 border-2 border-[#EEEEEE] ">
             <ul className="flex flex-col items-center justify-between h-full">
@@ -63,6 +66,7 @@ const NavRight: React.FC<NavRightProps> = ({ toggleNavGroup, toggleNavFriend,tog
                                 width={24}
                                 height={24}
                                 className="invert-[85%] group-hover:scale-110 transition-transform"
+                                onClick={() => toggleNotification()}
                             />
                         </Link>
                     </li>
@@ -74,6 +78,7 @@ const NavRight: React.FC<NavRightProps> = ({ toggleNavGroup, toggleNavFriend,tog
                                 width={24}
                                 height={24}
                                 className="invert-[85%] group-hover:scale-110 transition-transform"
+                                onClick={() => toggleMessage()}
                             />
                         </Link>
                     </li>
@@ -85,6 +90,7 @@ const NavRight: React.FC<NavRightProps> = ({ toggleNavGroup, toggleNavFriend,tog
                                 width={24}
                                 height={24}
                                 className="group-hover:scale-110 transition-transform"
+                                onClick={() => toggleProfile()}
                             />
                         </Link>
                     </li>

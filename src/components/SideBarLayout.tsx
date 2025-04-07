@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import NavRight from '@/components/NavRight';
 import NavGroup from '@/components/NavGroup';
 import NavFriend from '@/components/NavFriend';
+import Profile from '@/components/Profile';
+import Notification from '@/components/Notification';
+import Message from '@/components/Message';
 
 function SideBarLayout({
                            children,
@@ -12,10 +15,13 @@ function SideBarLayout({
     activeComponent: 'welcome' | 'createGroup' | 'inviteGroup';
     setActiveComponent: (component: 'welcome' | 'createGroup' | 'inviteGroup') => void;
 }) {
-    const [activeSidebar, setActiveSidebar] = useState<'group' | 'friend' | null>(null);
+    const [activeSidebar, setActiveSidebar] = useState<'group' | 'friend' | 'profile' | 'notification' | 'message' | null>(null);
 
     const toggleNavGroup = () => setActiveSidebar(activeSidebar === 'group' ? null : 'group');
     const toggleNavFriend = () => setActiveSidebar(activeSidebar === 'friend' ? null : 'friend');
+    const toggleProfile = () => setActiveSidebar(activeSidebar === 'profile' ? null : 'profile');
+    const toggleNotification = () => setActiveSidebar(activeSidebar === 'notification' ? null : 'notification');
+    const toggleMessage = () => setActiveSidebar(activeSidebar === 'message' ? null : 'message');
 
     return (
         <div className="min-h-screen flex flex-col bg-[#201E43]">
@@ -38,7 +44,28 @@ function SideBarLayout({
                     </div>
                 )}
 
+                {activeSidebar === 'profile' && (
+                    <div className="p-4 bg-[#201E43] h-screen flex items-center">
+                        <Profile />
+                    </div>
+                )}
+
+                {activeSidebar === 'notification' && (
+                    <div className="p-4 bg-[#201E43] h-screen flex items-center">
+                        <Notification />
+                    </div>
+                )}
+
+                {activeSidebar === 'message' && (
+                    <div className="p-4 bg-[#201E43] h-screen flex items-center">
+                        <Message />
+                    </div>
+                )}
+
                 <NavRight
+                    toggleMessage = {toggleMessage}
+                    toggleNotification={toggleNotification}
+                    toggleProfile={toggleProfile}
                     toggleNavGroup={toggleNavGroup}
                     toggleNavFriend={toggleNavFriend}
                     toggleWelcome={() => setActiveComponent('welcome')}
