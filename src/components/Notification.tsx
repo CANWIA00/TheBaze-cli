@@ -1,9 +1,36 @@
-import React from 'react';
+import React,{useState} from 'react';
 import Link from 'next/link';
 import Image from "next/image";
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
 
 
 function Notification() {
+    const [userName, setUserName] = useState("");
+    const [notificationMessage, setNotificationMessage] = useState("");
+    const socket =new SockJS('http://127.0.0.1:8080/ws');
+
+    const stompClient = new Client({
+        webSocketFactory: () => socket,
+        onConnect: (socket) => {
+            console.log("Connected to Websocket Client");
+
+            stompClient.subscribe('user/e07ba3ad-2214-469d-a24c-f9b8be1ee5c2/notifications',(message) => {
+                const notifications = message.body;
+                console.log("Notification received: %s", notifications);
+                setNotificationMessage(notifications);
+            });
+        },
+        onStompError: (error) => {
+            console.error("Broker reported error:", error.headers['message']);
+            console.error("Additional details:", error.body);
+        }
+
+    });
+
+    stompClient.activate();
+
+
     return (
         <div className="w-72 bg-[#201E43] shadow-lg fixed top-0 right-16 h-screen border border-[#EEEEEE] p-4 animate-slideIn flex flex-col">
             <div className={"flex item-center justify-center space-x-2 me-2"}>
