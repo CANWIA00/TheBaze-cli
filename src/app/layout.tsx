@@ -1,6 +1,7 @@
 import "./globals.css";
 import React from "react";
 import { Noto_Sans } from "next/font/google";
+import { WebSocketProvider } from "../components/WebSocketContext";
 
 const notoSans = Noto_Sans({
     subsets: ["latin"],
@@ -20,8 +21,9 @@ export default function RootLayout({
       <body
           className={notoSans.className}
       >
-
+        <WebSocketProvider>
         {children}
+        </WebSocketProvider>
       </body>
 
     </html>
