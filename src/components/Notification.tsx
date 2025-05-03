@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useWebSocket } from './WebSocketContext'; // Adjust the path accordingly
+import { useWebSocket } from './WebSocketContext';
 import Link from 'next/link';
 import Image from "next/image";
 

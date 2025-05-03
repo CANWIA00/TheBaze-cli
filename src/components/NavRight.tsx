@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from "next/image";
 import Link from 'next/link';
-
 
 interface NavRightProps {
     toggleNavGroup: () => void;
@@ -12,11 +11,28 @@ interface NavRightProps {
     toggleMessage: () => void;
 }
 
+const NavRight: React.FC<NavRightProps> = ({
+                                               toggleNavGroup,
+                                               toggleNavFriend,
+                                               toggleWelcome,
+                                               toggleProfile,
+                                               toggleNotification,
+                                               toggleMessage,
+                                           }) => {
+    const [notifications, setNotifications] = useState<number>(0);
 
 
-const NavRight: React.FC<NavRightProps> = ({ toggleNavGroup, toggleNavFriend,toggleWelcome, toggleProfile, toggleNotification, toggleMessage }) => {
+    useEffect(() => {
+
+        const interval = setInterval(() => {
+            setNotifications((prev) => prev + 1);
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, []);
+
     return (
-        <nav className="fixed right-0 top-0 h-screen bg-[#201E43] text-white w-16 flex flex-col items-center py-4 border-2 border-[#EEEEEE] ">
+        <nav className="fixed right-0 top-0 h-screen bg-[#201E43] text-white w-16 flex flex-col items-center py-4 border-2 border-[#EEEEEE]">
             <ul className="flex flex-col items-center justify-between h-full">
                 <div className="flex flex-col items-center space-y-6">
                     <li className="hover:bg-[#2F2C54] p-2 rounded-lg transition-all group">
@@ -58,7 +74,7 @@ const NavRight: React.FC<NavRightProps> = ({ toggleNavGroup, toggleNavFriend,tog
                     </li>
                 </div>
                 <div className="flex flex-col items-center space-y-6">
-                    <li className="hover:bg-[#2F2C54] p-2 rounded-lg transition-all group">
+                    <li className="hover:bg-[#2F2C54] p-2 rounded-lg transition-all group relative">
                         <Link href="">
                             <Image
                                 src="/icons/bell-filled.svg"
@@ -68,6 +84,9 @@ const NavRight: React.FC<NavRightProps> = ({ toggleNavGroup, toggleNavFriend,tog
                                 className="invert-[85%] group-hover:scale-110 transition-transform"
                                 onClick={() => toggleNotification()}
                             />
+                            {notifications > 0 && (
+                                <span className="absolute top-0 right-0 block w-3 h-3 rounded-full bg-third"></span>
+                            )}
                         </Link>
                     </li>
                     <li className="hover:bg-[#2F2C54] p-2 rounded-lg transition-all group">
@@ -105,7 +124,6 @@ const NavRight: React.FC<NavRightProps> = ({ toggleNavGroup, toggleNavFriend,tog
                             />
                         </Link>
                     </li>
-
                 </div>
             </ul>
         </nav>
