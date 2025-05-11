@@ -37,7 +37,7 @@ function NavFriend() {
             if (!response.ok) throw new Error("Failed to fetch friend requests");
 
             const data = await response.json();
-            setFriendRequests(data);  // Assuming the response is an array of FriendDto objects
+            setFriendRequests(data);
             setShowRequests(true);
         } catch (err) {
             console.error(err);
@@ -100,25 +100,60 @@ function NavFriend() {
                     {friendRequests.length > 0 ? (
                         <ul className="space-y-2 overflow-y-auto max-h-40">
                             {friendRequests.map((request) => (
-                                <li key={request.id} className="bg-[#2F2C54] p-2 rounded text-white text-sm flex items-center">
-                                    {/* Profile image and name from the sender */}
+                                <li
+                                    key={request.id}
+                                    className="bg-[#2F2C54] p-2 rounded text-white text-sm flex items-center"
+                                >
+                                    {/* Avatar */}
                                     <Image
-                                        src={request.sender.profilePhoto ? `http://localhost:8080/${request.sender.profilePhoto}` : "/icons/Ellipse 2.svg"}
+                                        src={"/icons/Ellipse 2.svg"}
                                         alt={request.sender.fullName ?? "Anonymous User"}
                                         width={24}
                                         height={24}
                                         className="rounded-full me-2"
                                     />
-                                    <p>{request.sender.fullName ?? "Anonymous User"}</p>
-                                    <p>{request.sender.user?.email ?? "No email"}</p>
+
+                                    {/* Name and Email */}
+                                    <div className="flex flex-col">
+                                        <p>{request.sender.fullName ?? "Anonymous User"}</p>
+                                        <p className="text-xs text-gray-300">
+                                            {request.sender.user?.email ?? "No email"}
+                                        </p>
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <div className="flex items-center gap-2 ml-auto">
+                                        <button>
+                                            <Image
+                                                src={"/icons/user-x.svg"}
+                                                alt="Reject friend request"
+                                                width={24}
+                                                height={24}
+                                                className="transition-all duration-300 hover:scale-110"
+                                            />
+                                        </button>
+
+                                        <button>
+                                            <Image
+                                                src={"/icons/user-plus1.svg"}
+                                                alt="Accept friend request"
+                                                width={24}
+                                                height={24}
+                                                className="transition-all duration-300 hover:scale-110"
+                                            />
+                                        </button>
+                                    </div>
                                 </li>
                             ))}
                         </ul>
                     ) : (
-                        <p className="text-white text-sm italic text-center my-4">There are no friend requests</p>
+                        <p className="text-white text-sm italic text-center my-4">
+                            There are no friend requests
+                        </p>
                     )}
                 </>
             )}
+
 
             {/* Find User Button */}
             <div className="mt-auto text-center space-y-2">

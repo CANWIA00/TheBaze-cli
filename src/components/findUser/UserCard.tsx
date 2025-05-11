@@ -8,6 +8,10 @@ type UserCardProps = {
         fullName: string;
         profilePhoto?: string;
         bio?: string;
+        birthDate?: string;
+        lastSeen?: string;
+        userId?: string;
+        userStatus?: string;
     };
 };
 
@@ -19,30 +23,31 @@ function UserCard({ user }: UserCardProps) {
         try {
             setIsSending(true);
             const token = localStorage.getItem('token');
-            if (!token) {
-                throw new Error("No authentication token found.");
-            }
+            console.log("profile id:", user.id);
+            console.log("Sending token:", token);
 
             const response = await fetch(`http://localhost:8080/api/v1/friend/${user.id}`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 },
             });
 
-            if (!response.ok) {
-                throw new Error("Failed to send friend request");
+            if (response.ok) {
+                setFriendAdded(true);
+            } else {
+                const errorText = await response.text();
+                console.error("Failed to send friend request: ", errorText);
             }
-
-            setFriendAdded(true);
         } catch (error) {
             console.error("Error sending friend request:", error);
-            alert("Something went wrong while sending the request.");
         } finally {
             setIsSending(false);
         }
     };
+
+
 
 
     return (

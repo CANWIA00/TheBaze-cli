@@ -12,7 +12,7 @@ function Page() {
 
     const handleSearch = async () => {
         try {
-            const token = localStorage.getItem('token'); // Adjust if using sessionStorage or cookies
+            const token = localStorage.getItem('token');
             const res = await fetch(`http://localhost:8080/api/v1/profile/search/${searchTerm}`, {
                 method: 'GET',
                 headers: {
@@ -23,6 +23,7 @@ function Page() {
 
             if (!res.ok) throw new Error('Search failed');
             const data = await res.json();
+            console.log("data : ",data);
             setSearchResults(data);
         } catch (error) {
             console.error('Error fetching users:', error);
