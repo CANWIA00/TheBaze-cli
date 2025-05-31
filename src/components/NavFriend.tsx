@@ -148,7 +148,7 @@ function NavFriend() {
                                 <Link href="#" className="flex items-center w-full">
                                     <div className="relative">
                                         <Image
-                                            src={"/icons/Ellipse 2.svg"} //TOD profile photo
+                                            src={"/icons/Ellipse 2.svg"} //TODO profile photo
                                             alt="Profile"
                                             width={24}
                                             height={24}
