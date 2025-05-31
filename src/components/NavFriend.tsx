@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from "next/link";
 import Image from "next/image";
 
 type User = {
     email: string;
-}
+};
 
 type Profile = {
     fullName?: string;
     profilePhoto?: string;
-    user?:User;
+    user?: User;
 };
 
 type FriendRequest = {
@@ -20,15 +20,47 @@ type FriendRequest = {
     createdAt: string;
 };
 
+type FriendProfile = {
+    id: string;
+    fullName: string;
+    profilePhoto?: string;
+    bio?: string;
+    birthDate?: string;
+    userStatus?: string;
+    lastSeen?: string;
+};
+
 function NavFriend() {
+    const [friends, setFriends] = useState<FriendProfile[]>([]);
     const [showRequests, setShowRequests] = useState(false);
     const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
 
+    useEffect(() => {
+        const fetchFriends = async () => {
+            const token = localStorage.getItem("token");
+            try {
+                const response = await fetch("http://localhost:8080/api/v1/friend/all", {
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) throw new Error("Failed to fetch friends");
+
+                const data = await response.json();
+                setFriends(data);
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        fetchFriends();
+    }, []);
+
     const fetchFriendRequests = async () => {
         const token = localStorage.getItem("token");
-
         try {
-            const response = await fetch("http://localhost:8080/api/v1/friend/pending", {
+            const response = await fetch("http://localhost:8080/api/v1/friend/request", {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
@@ -42,6 +74,46 @@ function NavFriend() {
         } catch (err) {
             console.error(err);
             alert("Error loading friend requests");
+        }
+    };
+
+    const handleAccept = async (requestId: string) => {
+        const token = localStorage.getItem("token");
+        try {
+            const response = await fetch(`http://localhost:8080/api/v1/friend/accept/${requestId}`, {
+                method: "PATCH",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            });
+
+            if (!response.ok) throw new Error("Failed to accept request");
+
+            setFriendRequests(prev => prev.filter(req => req.id !== requestId));
+        } catch (error) {
+            console.error(error);
+            alert("Failed to accept friend request");
+        }
+    };
+
+    const handleReject = async (requestId: string) => {
+        const token = localStorage.getItem("token");
+        try {
+            const response = await fetch(`http://localhost:8080/api/v1/friend/reject/${requestId}`, {
+                method: "PATCH",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            });
+
+            if (!response.ok) throw new Error("Failed to reject request");
+
+            setFriendRequests(prev => prev.filter(req => req.id !== requestId));
+        } catch (error) {
+            console.error(error);
+            alert("Failed to reject friend request");
         }
     };
 
@@ -63,22 +135,40 @@ function NavFriend() {
 
             <hr className="my-2 border-gray-300" />
 
-            {/* Online Friends (example) */}
+            {/* Online Friends (dynamic) */}
             <ul className="space-y-4 flex-grow">
-                <li className="hover:bg-[#2F2C54] px-2 rounded-lg transition-all">
-                    <div className="flex items-center text-center">
-                        <Link href="#" className="flex items-center w-full">
-                            <div className="relative">
-                                <Image src="/icons/Ellipse 2.svg" alt="Profile" width={24} height={24} className="me-2" />
-                                <div className="w-2 h-2 bg-blue-500 rounded-full absolute bottom-0 right-2"></div>
+                {friends.length === 0 ? (
+                    <li className="hover:bg-[#2F2C54] px-2 rounded-lg transition-all text-white text-center">
+                        No friends found.
+                    </li>
+                ) : (
+                    friends.map(friend => (
+                        <li key={friend.id} className="hover:bg-[#2F2C54] px-2 rounded-lg transition-all">
+                            <div className="flex items-center text-center">
+                                <Link href="#" className="flex items-center w-full">
+                                    <div className="relative">
+                                        <Image
+                                            src={"/icons/Ellipse 2.svg"} //TOD profile photo
+                                            alt="Profile"
+                                            width={24}
+                                            height={24}
+                                            className="me-2"
+                                        />
+                                        {friend.userStatus === "AVAILABLE" && (
+                                            <div className="w-2 h-2 bg-blue-500 rounded-full absolute bottom-0 right-2"></div>
+                                        )}
+                                    </div>
+                                    <div className="mt-1 text-start">
+                                        <span>{friend.fullName}</span>
+                                        <p className="text-xs font-bold text-[#508C9B]">
+                                            {friend.userStatus === "AVAILABLE" ? "Active" : "Offline"}
+                                        </p>
+                                    </div>
+                                </Link>
                             </div>
-                            <div className="mt-1 text-start">
-                                <span>TSM kor</span>
-                                <p className="text-xs font-bold text-[#508C9B]">Active</p>
-                            </div>
-                        </Link>
-                    </div>
-                </li>
+                        </li>
+                    ))
+                )}
             </ul>
 
             {/* Background Logo */}
@@ -123,7 +213,7 @@ function NavFriend() {
 
                                     {/* Action Buttons */}
                                     <div className="flex items-center gap-2 ml-auto">
-                                        <button>
+                                        <button onClick={() => handleReject(request.id)}>
                                             <Image
                                                 src={"/icons/user-x.svg"}
                                                 alt="Reject friend request"
@@ -133,7 +223,7 @@ function NavFriend() {
                                             />
                                         </button>
 
-                                        <button>
+                                        <button onClick={() => handleAccept(request.id)}>
                                             <Image
                                                 src={"/icons/user-plus1.svg"}
                                                 alt="Accept friend request"
@@ -153,7 +243,6 @@ function NavFriend() {
                     )}
                 </>
             )}
-
 
             {/* Find User Button */}
             <div className="mt-auto text-center space-y-2">
