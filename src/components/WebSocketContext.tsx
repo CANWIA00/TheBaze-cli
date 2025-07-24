@@ -47,15 +47,13 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
             connectHeaders: {
                 Authorization: `Bearer ${token}`,
             },
-            debug: (str) => {
-                console.log('STOMP: ', str);
-            },
+            // debug: (str) => {
+            //     console.log('STOMP: ', str);
+            // },
             reconnectDelay: 5000,
             onConnect: () => {
-                console.log('Connected to WebSocket!!');
 
                 stompClient?.subscribe('/user/topic/notifications', (message) => {
-                    console.log('Received Notification:', message.body);
 
                     try {
                         let notification: Notification;

@@ -1,7 +1,10 @@
 import React from 'react';
 import Image from 'next/image';
 
-function Header() {
+interface HeaderProps {
+    receiverName: string;
+}
+const Header: React.FC<HeaderProps> = ({ receiverName }) => {
     return (
         <div>
             <header className="relative fixed flex flex-row top-0 left-0 w-full pt-4 pb-4">
@@ -16,10 +19,9 @@ function Header() {
                             className="group-hover:scale-110 transition-transform"
                         />
                     </button>
-                    <h1 className="text-text text-2xl font-medium flex-grow">User_123@1asds</h1>
+                    <h1 className="text-text text-2xl font-medium flex-grow">{receiverName}</h1>
                 </div>
-
-                <div className="flex space-x-4 px-2 ml-auto"> {/* ml-auto makes this align to the right */}
+                <div className="flex space-x-4 px-2 ml-auto">
                     <button>
                         <Image
                             src="/icons/video.svg"

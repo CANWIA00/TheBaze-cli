@@ -22,6 +22,7 @@ type FriendRequest = {
 
 type FriendProfile = {
     id: string;
+    userMail: string;
     fullName: string;
     profilePhoto?: string;
     bio?: string;
@@ -53,7 +54,6 @@ function NavFriend() {
                 console.error(error);
             }
         };
-
         fetchFriends();
     }, []);
 
@@ -145,7 +145,7 @@ function NavFriend() {
                     friends.map(friend => (
                         <li key={friend.id} className="hover:bg-[#2F2C54] px-2 rounded-lg transition-all">
                             <div className="flex items-center text-center">
-                                <Link href="#" className="flex items-center w-full">
+                                <Link href={`/userChat/${friend.userMail}`} className="flex items-center w-full">
                                     <div className="relative">
                                         <Image
                                             src={"/icons/Ellipse 2.svg"} //TODO profile photo
