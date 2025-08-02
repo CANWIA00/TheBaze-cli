@@ -2,13 +2,16 @@ import React from 'react';
 import Image from 'next/image';
 
 interface ChatProfileDto {
-    senderFullName: string;
-    senderUserMail: string;
-    senderUserId: string;
-    receiverFullName: string;
-    receiverUserMail: string;
-    receiverUserId: string;
+    senderFullName: string,
+    senderUserMail: string,
+    senderPhotoUrl?: string,
+    senderUserId: string,
+    receiverFullName: string,
+    receiverUserMail: string,
+    receiverPhotoUrl?: string,
+    receiverUserId: string,
 }
+
 
 interface MessageProps {
     message: {
@@ -32,7 +35,11 @@ const Message: React.FC<MessageProps> = ({ message, isOwnMessage, chatProfile })
             {!isOwnMessage && (
                 <>
                     <Image
-                        src="/icons/Ellipse 2.svg"
+                        src={
+                            !chatProfile?.receiverPhotoUrl || chatProfile.receiverPhotoUrl === "null"
+                                ? "/icons/Ellipse 2.svg"
+                                : chatProfile.receiverPhotoUrl
+                        }
                         alt="profile"
                         width={40}
                         height={40}
@@ -95,7 +102,11 @@ const Message: React.FC<MessageProps> = ({ message, isOwnMessage, chatProfile })
                 <div className="ml-auto flex items-start space-x-3 p-3 rounded-lg max-w-[75%] break-words">
 
                 <Image
-                        src="/icons/Ellipse 2.svg"
+                    src={
+                        !chatProfile?.senderPhotoUrl || chatProfile.senderPhotoUrl === "null"
+                            ? "/icons/Ellipse 2.svg"
+                            : chatProfile.senderPhotoUrl
+                    }
                         alt="profile"
                         width={40}
                         height={40}

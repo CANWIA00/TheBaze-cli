@@ -1,15 +1,24 @@
 import SockJS from 'sockjs-client';
 import { CompatClient, Stomp } from '@stomp/stompjs';
 
-/**
- * WebSocket bağlantısı kurar ve belirtilen oda (roomId)'ya abone olur.
- * @param token JWT token'ı
- * @param roomId Ortak oda ID'si (örn: omer@gmail.com_ali@gmail.com)
- * @param onMessage Mesaj geldiğinde çalışacak callback
- */
-let stompClient: CompatClient | null = null;
-let currentSubscription: any = null;
+// 🔵 Chat client (mesajlar için)
+let chatStompClient: CompatClient | null = null;
+let chatSubscription: any = null;
 
+// 🟢 Signal client (CALL, OFFER, ANSWER, ICE için)
+let signalStompClient: CompatClient | null = null;
+let signalSubscription: any = null;
+
+export interface SignalMessageRequest {
+    from: string;
+    to: string;
+    type: 'CALL' | 'OFFER' | 'ANSWER' | 'ICE';
+    sdp?: string;
+}
+
+/**
+ * Mesajlaşma WebSocket bağlantısı kurar ve oda'ya abone olur.
+ */
 export const connectWebSocket = (
     token: string,
     roomId: string,
@@ -24,33 +33,31 @@ export const connectWebSocket = (
                 Authorization: `Bearer ${token}`,
             },
             () => {
-                console.log('✅ WebSocket connected');
+                console.log('✅ Chat WebSocket connected');
 
                 const topic = `/topic/chat/${roomId}`;
                 console.log(`📡 Subscribing to room: ${topic}`);
 
-                // ❗ Önceki varsa iptal et
-                if (currentSubscription) {
-                    currentSubscription.unsubscribe();
-                    console.log("🔁 Previous subscription unsubscribed");
+                if (chatSubscription) {
+                    chatSubscription.unsubscribe();
+                    console.log("🔁 Previous chat subscription unsubscribed");
                 }
 
-                // Yeni subscription
-                currentSubscription = client.subscribe(topic, (messageOutput) => {
+                chatSubscription = client.subscribe(topic, (messageOutput) => {
                     try {
                         const message = JSON.parse(messageOutput.body);
-                        console.log("📩 Received message:", message);
+                        console.log("📩 Received chat message:", message);
                         onMessage(message);
                     } catch (e) {
-                        console.warn("⚠️ Mesaj parse edilemedi:", e);
+                        console.warn("⚠️ Chat mesaj parse edilemedi:", e);
                     }
                 });
 
-                stompClient = client;
+                chatStompClient = client;
                 resolve(client);
             },
-            (error) => {
-                console.error('❌ WebSocket connection error:', error);
+            (error: any) => {
+                console.error('❌ Chat WebSocket connection error:', error);
                 reject(error);
             }
         );
@@ -58,26 +65,112 @@ export const connectWebSocket = (
 };
 
 /**
- * WebSocket üzerinden mesaj gönderir.
- * @param chatMessageDto Gönderilecek mesaj DTO'su
+ * Mesaj gönderir (CHAT/FILE için)
  */
 export const sendChatMessage = (chatMessageDto: any) => {
-    if (stompClient && stompClient.connected) {
-        stompClient.send('/app/chat.sendMessage', {}, JSON.stringify(chatMessageDto));
-        console.log("📤 Sent message:", chatMessageDto);
+    if (chatStompClient && chatStompClient.connected) {
+        chatStompClient.send('/app/chat.sendMessage', {}, JSON.stringify(chatMessageDto));
+        console.log("📤 Sent chat message:", chatMessageDto);
     } else {
-        console.warn('⚠️ WebSocket not connected');
+        console.warn('⚠️ Chat WebSocket not connected');
     }
 };
 
 /**
- * Bağlantıyı manuel kapatmak istersen:
+ * Chat WebSocket bağlantısını kapatır.
  */
 export const disconnectWebSocket = () => {
-    if (stompClient && stompClient.connected) {
-        stompClient.disconnect(() => {
-            console.log("🔌 WebSocket disconnected");
+    if (chatStompClient && chatStompClient.connected) {
+        chatStompClient.disconnect(() => {
+            console.log("🔌 Chat WebSocket disconnected");
         });
-        stompClient = null;
+        chatStompClient = null;
+        chatSubscription = null;
+    }
+};
+
+/**
+ * Sinyal WebSocket bağlantısı kurar ve kullanıcıya özel /user/queue/signal kanalına abone olur.
+ */
+export const subscribeToSignal = (token: string, onSignal: (signal: any) => void) => {
+    console.log("🔔 subscribeToSignal called with token:", token ? "present" : "missing");
+    
+    const socket = new SockJS('http://localhost:8080/ws');
+    const client = Stomp.over(socket);
+
+    client.connect({ Authorization: `Bearer ${token}` }, () => {
+        console.log("✅ Signal WebSocket connected");
+
+        signalSubscription = client.subscribe(`/user/queue/signal`, (message) => {
+            console.log(" Raw signal message received:", message.body);
+            try {
+                const signal = JSON.parse(message.body);
+                console.log("📶 Parsed signal:", signal);
+                onSignal(signal);
+            } catch (e) {
+                console.warn("⚠️ Signal parse error:", e);
+            }
+        });
+
+        signalStompClient = client;
+    }, (err: any) => {
+        console.error("❌ Signal connect error:", err);
+    });
+};
+
+/**
+ * Sinyal aboneliğini ve bağlantıyı kapatır.
+ */
+export const unsubscribeFromSignal = () => {
+    if (signalSubscription) {
+        signalSubscription.unsubscribe();
+        signalSubscription = null;
+    }
+    if (signalStompClient && signalStompClient.connected) {
+        signalStompClient.disconnect(() => {
+            console.log("🔌 Signal WebSocket disconnected");
+        });
+        signalStompClient = null;
+    }
+};
+
+/**
+ * Sadece CALL sinyali gönderir (çağrı başlatmak için)
+ */
+export const sendCallSignal = (signal: SignalMessageRequest) => {
+    if (!signalStompClient) {
+        console.warn("❌ signalStompClient not initialized.");
+        return;
+    }
+
+    if (!signalStompClient.connected) {
+        console.warn("⚠️ signalStompClient not connected yet. Retrying in 500ms...");
+        setTimeout(() => sendCallSignal(signal), 500);
+        return;
+    }
+    console.log("🧪 Trying to send signal:", signal);
+    try {
+        signalStompClient.send(
+            "/app/call",
+            {},
+            JSON.stringify(signal)
+        );
+        console.log("📤 Sent signal:", signal);
+    } catch (err) {
+        console.error("❌ Error sending signal:", err);
+    }
+};
+
+
+
+/**
+ * OFFER, ANSWER, ICE gibi sinyalleri gönderir.
+ */
+export const sendSignal = (signal: any, token: string) => {
+    if (signalStompClient && signalStompClient.connected) {
+        signalStompClient.send('/app/call', { Authorization: `Bearer ${token}` }, JSON.stringify(signal));
+        console.log('📤 Sent signal:', signal);
+    } else {
+        console.warn('⚠️ Signal WebSocket not connected. Cannot send signal.');
     }
 };

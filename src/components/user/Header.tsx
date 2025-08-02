@@ -1,25 +1,59 @@
+'use client';
 import React from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { sendCallSignal } from "@/lib/socket";
 
-interface HeaderProps {
-    receiverName: string;
+
+interface ChatProfileDto {
+    senderFullName: string;
+    senderUserMail: string;
+    senderPhotoUrl?: string;
+    senderUserId: string;
+    receiverFullName: string;
+    receiverUserMail: string;
+    receiverPhotoUrl?: string;
+    receiverUserId: string;
 }
-const Header: React.FC<HeaderProps> = ({ receiverName }) => {
+interface HeaderProps {
+    chatProfile: ChatProfileDto;
+}
+const Header: React.FC<HeaderProps> = ({ chatProfile  }) => {
+    const router = useRouter();
+
+    const handleCallClick = () => {
+        const receiverMail = chatProfile.receiverUserMail;
+        const senderMail = chatProfile.senderUserMail;
+        sendCallSignal({
+            from: senderMail,
+            to: receiverMail,
+            type: 'CALL',
+        });
+
+        router.push(`/userCall/${encodeURIComponent(receiverMail)}`);
+    };
+
+
+
     return (
         <div>
             <header className="relative fixed flex flex-row top-0 left-0 w-full pt-4 pb-4">
                 <div className="flex items-center space-x-4 px-2">
                     <button>
                         <Image
-                            src="/icons/Ellipse 2.svg"
+                            src={
+                                !chatProfile?.receiverPhotoUrl || chatProfile.receiverPhotoUrl === "null"
+                                    ? "/icons/Ellipse 2.svg"
+                                    : chatProfile.receiverPhotoUrl
+                            }
                             alt="settings"
                             width={44}
                             height={44}
                             priority={true}
-                            className="group-hover:scale-110 transition-transform"
+                            className="rounded-full group-hover:scale-110 transition-transform"
                         />
                     </button>
-                    <h1 className="text-text text-2xl font-medium flex-grow">{receiverName}</h1>
+                    <h1 className="text-text text-2xl font-medium flex-grow">{chatProfile?.receiverFullName}</h1>
                 </div>
                 <div className="flex space-x-4 px-2 ml-auto">
                     <button>
@@ -32,10 +66,10 @@ const Header: React.FC<HeaderProps> = ({ receiverName }) => {
                             className="group-hover:scale-110 transition-transform"
                         />
                     </button>
-                    <button>
+                    <button onClick={handleCallClick}>
                         <Image
                             src="/icons/phone.svg"
-                            alt="settings"
+                            alt="phone"
                             width={24}
                             height={24}
                             priority={true}

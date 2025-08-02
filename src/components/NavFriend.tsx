@@ -148,11 +148,15 @@ function NavFriend() {
                                 <Link href={`/userChat/${friend.userMail}`} className="flex items-center w-full">
                                     <div className="relative">
                                         <Image
-                                            src={"/icons/Ellipse 2.svg"} //TODO profile photo
+                                            src={
+                                                !friend?.profilePhoto || friend?.profilePhoto === "null"
+                                                    ? "/icons/Ellipse 2.svg"
+                                                    : friend?.profilePhoto
+                                            }
                                             alt="Profile"
                                             width={24}
                                             height={24}
-                                            className="me-2"
+                                            className="rounded-full me-2"
                                         />
                                         {friend.userStatus === "AVAILABLE" && (
                                             <div className="w-2 h-2 bg-blue-500 rounded-full absolute bottom-0 right-2"></div>

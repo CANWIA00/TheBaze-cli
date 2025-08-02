@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Image from "next/image";
 import Link from 'next/link';
+import { useProfile } from '../components/context/ProfileProvider';
+
 
 interface NavRightProps {
     toggleNavGroup: () => void;
@@ -20,6 +22,7 @@ const NavRight: React.FC<NavRightProps> = ({
                                                toggleMessage,
                                            }) => {
     const [notifications, setNotifications] = useState<number>(0);
+    const profile = useProfile();
 
 
     useEffect(() => {
@@ -101,14 +104,14 @@ const NavRight: React.FC<NavRightProps> = ({
                             />
                         </Link>
                     </li>
-                    <li className="hover:bg-[#2F2C54] p-2 rounded-lg transition-all group">
+                    <li className="hover:bg-[#2F2C54] p-2 rounded-full transition-all group">
                         <Link href="">
                             <Image
-                                src="/icons/Ellipse 2.svg"
+                                src={ profile?.profilePhoto || "/icons/Ellipse 2.svg"}
                                 alt="Profile"
-                                width={24}
-                                height={24}
-                                className="group-hover:scale-110 transition-transform"
+                                width={34}
+                                height={34}
+                                className="rounded-full group-hover:scale-110 transition-transform"
                                 onClick={() => toggleProfile()}
                             />
                         </Link>

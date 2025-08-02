@@ -20,9 +20,11 @@ interface MessageDto {
 interface ChatProfileDto {
     senderFullName: string,
     senderUserMail: string,
+    senderPhotoUrl?: string,
     senderUserId: string,
     receiverFullName: string,
     receiverUserMail: string,
+    receiverPhotoUrl?: string,
     receiverUserId: string,
 }
 
@@ -58,7 +60,6 @@ function Page() {
                 await connectWebSocket(token, generatedRoomId, (message) => {
                     setMessages((prev) => [...prev, message]);
                 });
-
                 setIsWebSocketReady(true);
             } catch (error) {
                 console.error("❌ WebSocket connection error:", error);
@@ -79,6 +80,7 @@ function Page() {
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
+
 
 
 
@@ -175,8 +177,7 @@ function Page() {
             </div>
             <div className="col-span-8 row-span-12 col-start-3 row-start-1 flex flex-col h-full">
                 <div className="sticky top-0 bg-first z-20">
-                    <Header receiverName={chatProfile?.receiverFullName ?? ''} />
-
+                    {chatProfile && <Header chatProfile={chatProfile} />}
                 </div>
                 <div className="flex-1 p-4 grid gap-4 h-full overflow-y-auto">
                     <ul>
