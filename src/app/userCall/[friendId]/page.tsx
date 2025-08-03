@@ -6,7 +6,9 @@ import Image from "next/image";
 import Message from "../../../components/group/Message";
 import SendMessage from "../../../components/group/SendMessage";
 import { useParams } from 'next/navigation';
-import { connectWebSocket, sendChatMessage, disconnectWebSocket, sendCallSignal } from "../../../lib/socket";
+import { connectWebSocket, sendChatMessage, disconnectWebSocket, sendCallSignal, subscribeToSignal  } from "../../../lib/socket";
+
+type SignalType = 'CALL' | 'OFFER' | 'ANSWER' | 'ICE';
 
 
 interface MessageDto {
@@ -31,7 +33,7 @@ interface ChatProfileDto {
 interface SignalMessageRequest {
     from: string;
     to: string;
-    type: 'OFFER' | 'ANSWER' | 'CALL';
+    type: SignalType;
     sdp?: string;
 }
 
@@ -54,6 +56,36 @@ function Page() {
         const token = localStorage.getItem('token');
         if (!token || !receiverMail) return;
 
+        const handleSignal = async (signal: SignalMessageRequest) => {
+            console.log("📶 [userCall] Arama geldi:", signal);
+
+            if (!signal?.type || !signal.to || !signal.from) return;
+
+            switch (signal.type) {
+                case "OFFER":
+                    await handleOffer(signal);
+                    break;
+                case "ANSWER":
+                    await handleAnswer(signal);
+                    break;
+                case "ICE":
+                    try {
+                        const candidate = new RTCIceCandidate(JSON.parse(signal.sdp!));
+                        if (peerRef.current) {
+                            await peerRef.current.addIceCandidate(candidate);
+                            console.log("🌍 ICE eklendi");
+                        } else {
+                            console.warn("⚠️ peerRef null, ICE eklenemedi");
+                        }
+                    } catch (e) {
+                        console.error("❌ ICE parse/add hatası:", e);
+                    }
+                    break;
+                default:
+                    console.warn("⚠️ Bilinmeyen signal türü:", signal.type);
+            }
+        };
+
         (async () => {
             const userMail = await fetchCurrentUserFullName();
             if (!userMail) {
@@ -67,7 +99,7 @@ function Page() {
             await fetchChatHistory(generatedRoomId, token);
 
             try {
-                await connectWebSocket(token, roomId, async (message) => {
+                await connectWebSocket(token, generatedRoomId, async (message) => {
                     if (message.type === 'OFFER') {
                         await handleOffer(message);
                     } else if (message.type === 'ANSWER') {
@@ -82,6 +114,7 @@ function Page() {
                 });
 
 
+                subscribeToSignal(token, handleSignal);
                 setIsWebSocketReady(true);
             } catch (error) {
                 console.error("❌ WebSocket connection error:", error);
@@ -94,6 +127,7 @@ function Page() {
             disconnectWebSocket();
         };
     }, [receiverMail]);
+
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -277,8 +311,6 @@ function Page() {
 
             }
         };
-
-
         peer.ontrack = (event) => {
             console.log("🔊 Remote track geldi (Answer tarafı)");
             if (remoteAudioRef.current) {

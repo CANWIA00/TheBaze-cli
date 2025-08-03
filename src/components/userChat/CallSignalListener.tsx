@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState,useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { subscribeToSignal, unsubscribeFromSignal } from '@/lib/socket';
 import Modal from '../../components/Modal';
@@ -23,17 +23,17 @@ const CallSignalListener: React.FC = () => {
     useEffect(() => {
         const token = localStorage.getItem("token");
 
-        // Profil gelmeden önce loglama + bekleme
         console.log(" CallSignalListener useEffect çalıştı. Token:", token, "Mail:", profile?.userMail);
+
         if (!token || !profile?.userMail) {
             console.log("🚫 Token veya profil mail yok. Bekleniyor...");
             return;
         }
 
-        const handleSignal = (signal: any) => {
-            console.log("📶 Signal received globally:", signal); // Bu mutlaka gözükmeli!
+        const handleSignal = async (signal: any) => {
+            console.log("📶 Signal received globally:", signal);
 
-            if (!signal?.type) {
+            if (!signal?.type || !signal.to || !signal.from) {
                 console.warn("❌ Invalid signal payload:", signal);
                 return;
             }
@@ -41,19 +41,32 @@ const CallSignalListener: React.FC = () => {
             if (signal.type === "CALL" && signal.to === profile.userMail) {
                 console.log("📞 Incoming call for me!");
                 setIncomingCall(signal);
+                return;
+            }
+
+            if (signal.type === "ICE") {
+                console.log("🔁 ICE signal geldi ama burada işlenmiyor (userCall sayfasına bırakılıyor)");
+                return;
+            }
+
+        };
+
+        const setupSignalConnection = async () => {
+            try {
+                console.log("🔔 Starting signal subscription for:", profile.userMail);
+                await subscribeToSignal(token, handleSignal);  // ✅ await burada
+            } catch (err) {
+                console.error("❌ Error while subscribing to signal:", err);
             }
         };
 
-        // Signal subscription'ı başlat
-        console.log("🔔 Starting signal subscription for:", profile.userMail);
-        subscribeToSignal(token, handleSignal);
+        setupSignalConnection();
 
         return () => {
             console.log(" Cleaning up signal subscription");
             unsubscribeFromSignal();
         };
-    }, [profile?.userMail]); // Token'ı dependency'den çıkardık çünkü localStorage'dan alıyoruz
-
+    }, [profile?.userMail]);
     const handleAccept = () => {
         if (incomingCall) {
             console.log("✅ Call accepted, navigating to:", incomingCall.from);

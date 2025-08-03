@@ -26,7 +26,7 @@ export const connectWebSocket = (
 ): Promise<CompatClient> => {
     return new Promise((resolve, reject) => {
         const socket = new SockJS('http://localhost:8080/ws');
-        const client = Stomp.over(socket);
+        const client = Stomp.over(() => socket);
 
         client.connect(
             {
@@ -92,29 +92,50 @@ export const disconnectWebSocket = () => {
 /**
  * Sinyal WebSocket bağlantısı kurar ve kullanıcıya özel /user/queue/signal kanalına abone olur.
  */
-export const subscribeToSignal = (token: string, onSignal: (signal: any) => void) => {
+export const subscribeToSignal = (
+    token: string,
+    onSignal: (signal: any) => void
+): Promise<CompatClient> => {
     console.log("🔔 subscribeToSignal called with token:", token ? "present" : "missing");
-    
-    const socket = new SockJS('http://localhost:8080/ws');
-    const client = Stomp.over(socket);
+    console.log("🛠 Subscribing to: /user/queue/signal");
 
-    client.connect({ Authorization: `Bearer ${token}` }, () => {
-        console.log("✅ Signal WebSocket connected");
+    return new Promise((resolve, reject) => {
+        const socket = new SockJS('http://localhost:8080/ws');
+        const client = Stomp.over(() => socket); // auto-reconnect için factory function
+        client.debug = (str) => {
+            console.log("📡 STOMP DEBUG:", str);
+        };
 
-        signalSubscription = client.subscribe(`/user/queue/signal`, (message) => {
-            console.log(" Raw signal message received:", message.body);
-            try {
-                const signal = JSON.parse(message.body);
-                console.log("📶 Parsed signal:", signal);
-                onSignal(signal);
-            } catch (e) {
-                console.warn("⚠️ Signal parse error:", e);
+        client.connect(
+            { Authorization: `Bearer ${token}` },
+            () => {
+                console.log("✅ Signal WebSocket connected");
+                console.log(`toke: ${token}`)
+
+
+                client.subscribe("/topic/signalTest", (message) => {
+                    console.log("✅ Topic message received:", message.body);
+                });
+
+                signalSubscription = client.subscribe(`/user/queue/signal`, (message) => {
+                    console.log(" Raw signal message received:", message.body);
+                    try {
+                        const signal = JSON.parse(message.body);
+                        console.log("📶 Parsed signal:", signal);
+                        onSignal(signal);
+                    } catch (e) {
+                        console.warn("⚠️ Signal parse error:", e);
+                    }
+                });
+
+                signalStompClient = client;
+                resolve(client);
+            },
+            (err: any) => {
+                console.error("❌ Signal connect error:", err);
+                reject(err);
             }
-        });
-
-        signalStompClient = client;
-    }, (err: any) => {
-        console.error("❌ Signal connect error:", err);
+        );
     });
 };
 
@@ -138,8 +159,8 @@ export const unsubscribeFromSignal = () => {
  * Sadece CALL sinyali gönderir (çağrı başlatmak için)
  */
 export const sendCallSignal = (signal: SignalMessageRequest) => {
-    if (!signalStompClient) {
-        console.warn("❌ signalStompClient not initialized.");
+    if (!signalStompClient || !signalStompClient.connected) {
+        console.warn("⚠️ sendCallSignal skipped: signalStompClient not ready.");
         return;
     }
 
