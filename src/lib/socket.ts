@@ -94,6 +94,7 @@ export const disconnectWebSocket = () => {
  */
 export const subscribeToSignal = (
     token: string,
+    userMail: string,
     onSignal: (signal: any) => void
 ): Promise<CompatClient> => {
     console.log("🔔 subscribeToSignal called with token:", token ? "present" : "missing");
@@ -112,20 +113,10 @@ export const subscribeToSignal = (
                 console.log("✅ Signal WebSocket connected");
                 console.log(`toke: ${token}`)
 
-
-                client.subscribe("/topic/signalTest", (message) => {
-                    console.log("✅ Topic message received:", message.body);
-                });
-
-                signalSubscription = client.subscribe(`/user/queue/signal`, (message) => {
-                    console.log(" Raw signal message received:", message.body);
-                    try {
-                        const signal = JSON.parse(message.body);
-                        console.log("📶 Parsed signal:", signal);
-                        onSignal(signal);
-                    } catch (e) {
-                        console.warn("⚠️ Signal parse error:", e);
-                    }
+                client.subscribe(`/topic/user/${userMail}/signal`, (message) => {
+                    const signal = JSON.parse(message.body);
+                    console.log("📶 SIGNAL RECEIVED:", signal);
+                    onSignal(signal);
                 });
 
                 signalStompClient = client;

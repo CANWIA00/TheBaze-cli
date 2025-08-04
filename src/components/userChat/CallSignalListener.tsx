@@ -54,7 +54,7 @@ const CallSignalListener: React.FC = () => {
         const setupSignalConnection = async () => {
             try {
                 console.log("🔔 Starting signal subscription for:", profile.userMail);
-                await subscribeToSignal(token, handleSignal);  // ✅ await burada
+                await subscribeToSignal(token, profile.userMail,handleSignal);
             } catch (err) {
                 console.error("❌ Error while subscribing to signal:", err);
             }

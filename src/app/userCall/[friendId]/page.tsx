@@ -114,7 +114,7 @@ function Page() {
                 });
 
 
-                subscribeToSignal(token, handleSignal);
+                subscribeToSignal(token, userMail,handleSignal);
                 setIsWebSocketReady(true);
             } catch (error) {
                 console.error("❌ WebSocket connection error:", error);
