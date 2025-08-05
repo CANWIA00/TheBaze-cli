@@ -49,8 +49,27 @@ function Page() {
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
     const peerRef = useRef<RTCPeerConnection | null>(null);
     const localStreamRef = useRef<MediaStream | null>(null);
-    const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
+    const remoteAudioCallerRef = useRef<HTMLAudioElement | null>(null);
+    const remoteAudioCalleeRef = useRef<HTMLAudioElement | null>(null);
+    const pendingCandidates = useRef<RTCIceCandidateInit[]>([]);
+
     const [roomId, setRoomId] = useState<string>("");
+
+    useEffect(() => {
+        const getMicAccess = async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                localStreamRef.current = stream;
+                console.log("🎙️ Mikrofon erişimi erken alındı");
+
+            } catch (err) {
+                console.error("🚫 Erken mikrofon erişimi alınamadı:", err);
+            }
+        };
+
+        getMicAccess();
+    }, []);
+
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -58,11 +77,13 @@ function Page() {
 
         const handleSignal = async (signal: SignalMessageRequest) => {
             console.log("📶 [userCall] Arama geldi:", signal);
+            console.log("📥 OFFER handle ediliyor");
 
             if (!signal?.type || !signal.to || !signal.from) return;
 
             switch (signal.type) {
                 case "OFFER":
+                    console.log("🟢 OFFER geldi, handleOffer çağrılacak");
                     await handleOffer(signal);
                     break;
                 case "ANSWER":
@@ -70,12 +91,13 @@ function Page() {
                     break;
                 case "ICE":
                     try {
-                        const candidate = new RTCIceCandidate(JSON.parse(signal.sdp!));
-                        if (peerRef.current) {
-                            await peerRef.current.addIceCandidate(candidate);
+                        const candidate = JSON.parse(signal.sdp!);
+                        if (peerRef.current?.remoteDescription) {
+                            await peerRef.current.addIceCandidate(new RTCIceCandidate(candidate));
                             console.log("🌍 ICE eklendi");
                         } else {
-                            console.warn("⚠️ peerRef null, ICE eklenemedi");
+                            console.warn("🧊 ICE buffer'a alındı");
+                            pendingCandidates.current.push(candidate);
                         }
                     } catch (e) {
                         console.error("❌ ICE parse/add hatası:", e);
@@ -113,7 +135,6 @@ function Page() {
                     }
                 });
 
-
                 subscribeToSignal(token, userMail,handleSignal);
                 setIsWebSocketReady(true);
             } catch (error) {
@@ -127,7 +148,6 @@ function Page() {
             disconnectWebSocket();
         };
     }, [receiverMail]);
-
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -164,7 +184,6 @@ function Page() {
             return null;
         }
     };
-
 
     const handleSend = (text: string, file?: File | null) => {
         const token = localStorage.getItem('token');
@@ -262,9 +281,16 @@ function Page() {
 
         // Karşıdan ses gelince oynat
         peer.ontrack = (event) => {
-            console.log("🔊 Remote track alındı");
-            if (remoteAudioRef.current) {
-                remoteAudioRef.current.srcObject = event.streams[0];
+            const stream = event.streams[0];
+            console.log("🔊 Gelen track:", stream);
+
+            stream.getAudioTracks().forEach(track => {
+                console.log("🎧 Gelen audio track:", track);
+                console.log("🔴 Aktif mi:", track.enabled, "| Sessiz mi:", track.muted);
+            });
+            if (remoteAudioCallerRef.current && event.streams[0]) {
+                remoteAudioCallerRef.current.srcObject = event.streams[0];
+                console.log("📞 Caller tarafı: ses stream atandı!");
             }
         };
 
@@ -289,8 +315,9 @@ function Page() {
         });
     };
 
-    const handleOffer = async (message: MessageDto) => {
+    const handleOffer = async (message: any) => {
         console.log("📨 handleOffer tetiklendi");
+        
 
         const peer = new RTCPeerConnection({
             iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
@@ -298,59 +325,123 @@ function Page() {
 
         peerRef.current = peer;
 
+
+        // 🔁 ICE candidate gönder
         peer.onicecandidate = (event) => {
             if (event.candidate) {
                 console.log("📡 ICE Candidate (callee):", event.candidate);
                 sendCallSignal({
-                    from: message.senderMail,
-                    to: message.receiverMail,
+                    from: message.to,
+                    to: message.from,
                     type: 'ICE',
                     sdp: JSON.stringify(event.candidate),
                 });
-
-
             }
         };
+
+        // 🔊 Gelen sesi remote audio'ya bağla
         peer.ontrack = (event) => {
-            console.log("🔊 Remote track geldi (Answer tarafı)");
-            if (remoteAudioRef.current) {
-                remoteAudioRef.current.srcObject = event.streams[0];
+            const stream = event.streams[0];
+            console.log("🔊 Gelen track:", stream);
+
+            stream.getAudioTracks().forEach(track => {
+                console.log("🎧 Gelen audio track:", track);
+                console.log("🔴 Aktif mi:", track.enabled, "| Sessiz mi:", track.muted);
+            });
+            if (remoteAudioCalleeRef.current && event.streams[0]) {
+                remoteAudioCalleeRef.current.srcObject = event.streams[0];
+                console.log("📞 Callee tarafı: ses stream atandı!");
             }
-        };
-        peer.onconnectionstatechange = () => {
-            console.log("🔄 Connection State:", peer.connectionState);
         };
 
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            // 🔐 Mikrofon erişimi al
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             localStreamRef.current = stream;
-            stream.getTracks().forEach(track => peer.addTrack(track, stream));
+
+            stream.getTracks().forEach(track => {
+                peer.addTrack(track, stream);
+            });
+
+            console.log("🎙️ Mikrofon erişimi alındı ve peer'a eklendi");
+
         } catch (err) {
-            console.error("🚫 Mikrofon erişimi reddedildi:", err);
+            console.error("🚫 Mikrofon erişimi reddedildi veya başarısız:", err);
+            return; // Devam etme, çünkü ses gönderilemez
         }
 
-
-        const offerDesc = new RTCSessionDescription(JSON.parse(message.content));
+        // 📥 Gelen OFFER SDP'yi set et
+        const offerDesc = new RTCSessionDescription(
+            message.sdp ? JSON.parse(message.sdp) : JSON.parse(message.content)
+        );
         await peer.setRemoteDescription(offerDesc);
+        console.log("📥 Remote SDP set edildi");
 
+        // 💾 ICE buffer varsa şimdi ekle
+        if (pendingCandidates.current.length > 0) {
+            for (const cand of pendingCandidates.current) {
+                await peer.addIceCandidate(new RTCIceCandidate(cand));
+            }
+            console.log(`🧊 ${pendingCandidates.current.length} ICE candidate eklendi (buffer'dan)`);
+            pendingCandidates.current = [];
+        }
+
+        // 📤 ANSWER oluştur ve gönder
         const answer = await peer.createAnswer();
         await peer.setLocalDescription(answer);
-
-        console.log("📨 ANSWER gönderiliyor:", answer);
+        console.log("📤 SDP Answer oluşturuldu ve set edildi");
 
         sendCallSignal({
-            from: message.receiverMail,
-            to: message.senderMail,
+            from: message.to,
+            to: message.from,
             type: 'ANSWER',
             sdp: JSON.stringify(answer),
         });
+
+        // 💾 ICE buffer varsa şimdi ekle
+        if (pendingCandidates.current.length > 0) {
+            for (const cand of pendingCandidates.current) {
+                try {
+                    await peer.addIceCandidate(new RTCIceCandidate(cand));
+                    console.log("🧊 Buffered ICE candidate eklendi:", cand);
+                } catch (err) {
+                    console.error("❌ ICE eklenirken hata:", err);
+                }
+            }
+            pendingCandidates.current = [];
+        }
+        peer.oniceconnectionstatechange = () => {
+            console.log("🔁 ICE connection state:", peer.iceConnectionState);
+        };
+        console.log("📤 SDP Answer sinyali gönderildi");
     };
 
-    const handleAnswer = async (message: MessageDto) => {
-        const answerDesc = new RTCSessionDescription(JSON.parse(message.content));
-        await peerRef.current?.setRemoteDescription(answerDesc);
+    const handleAnswer = async (message: any) => {
+        const answerDesc = new RTCSessionDescription(
+            message.sdp ? JSON.parse(message.sdp) : JSON.parse(message.content)
+        );
+        if (peerRef.current) {
+            await peerRef.current.setRemoteDescription(answerDesc);
+        } else {
+            console.warn("❌ Peer connection not initialized before setting remote description");
+        }
+
         console.log("✅ ANSWER set edildi.");
+
+    // 💾 ICE buffer varsa şimdi ekle
+        if (pendingCandidates.current.length > 0) {
+            for (const cand of pendingCandidates.current) {
+                try {
+                    await peerRef.current?.addIceCandidate(new RTCIceCandidate(cand));
+                    console.log("🧊 Buffered ICE candidate eklendi:", cand);
+                } catch (err) {
+                    console.error("❌ ICE eklenirken hata:", err);
+                }
+            }
+            pendingCandidates.current = [];
+        }
     };
+
 
     const toggleMute = () => {
         if (localStreamRef.current) {
@@ -361,17 +452,27 @@ function Page() {
     };
 
     const endCall = () => {
+        // 1. Peer bağlantısını kapat
         peerRef.current?.close();
         peerRef.current = null;
 
-        localStreamRef.current?.getTracks().forEach(track => track.stop());
-        localStreamRef.current = null;
-
-        if (remoteAudioRef.current) {
-            remoteAudioRef.current.srcObject = null;
+        // 2. Mikrofonu durdur
+        if (localStreamRef.current) {
+            localStreamRef.current.getTracks().forEach(track => track.stop());
+            localStreamRef.current = null;
         }
-    };
 
+        // 3. Ses elementlerinden stream bağlantısını kopar
+        if (remoteAudioCallerRef.current) {
+            remoteAudioCallerRef.current.srcObject = null;
+        }
+
+        if (remoteAudioCalleeRef.current) {
+            remoteAudioCalleeRef.current.srcObject = null;
+        }
+
+        console.log("🔚 Call sonlandırıldı ve kaynaklar temizlendi.");
+    };
 
 
     return (
@@ -510,7 +611,9 @@ function Page() {
 
                 <div className="sticky py-4 bottom-0 bg-first z-20 shadow-md">
                     <SendMessage onSend={handleSend} />
-                    <audio ref={remoteAudioRef} autoPlay />
+                    <audio ref={remoteAudioCallerRef} autoPlay playsInline controls />
+                    <audio ref={remoteAudioCalleeRef} autoPlay playsInline controls />
+
                 </div>
             </div>
         </div>

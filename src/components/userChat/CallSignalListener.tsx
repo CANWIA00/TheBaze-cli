@@ -17,6 +17,7 @@ interface SignalMessageRequest {
 const CallSignalListener: React.FC = () => {
     console.log(" CallSignalListener component rendered");
     const [incomingCall, setIncomingCall] = useState<SignalMessageRequest | null>(null);
+
     const router = useRouter();
     const profile = useProfile();
 
@@ -70,6 +71,7 @@ const CallSignalListener: React.FC = () => {
     const handleAccept = () => {
         if (incomingCall) {
             console.log("✅ Call accepted, navigating to:", incomingCall.from);
+            setIncomingCall(null);
             router.push(`/userCall/${encodeURIComponent(incomingCall.from)}`);
         }
     };
