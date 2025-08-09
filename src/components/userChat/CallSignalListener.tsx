@@ -17,10 +17,32 @@ interface SignalMessageRequest {
 const CallSignalListener: React.FC = () => {
     console.log(" CallSignalListener component rendered");
     const [incomingCall, setIncomingCall] = useState<SignalMessageRequest | null>(null);
+    const ringtoneRef = useRef<HTMLAudioElement | null>(null);
 
     const router = useRouter();
     const profile = useProfile();
+    useEffect(() => {
+        const el = ringtoneRef.current;
+        if (!el) return;
 
+        if (incomingCall) {
+            try {
+                el.loop = true;
+                el.volume = 0.7;
+                el.currentTime = 0;
+                el.play().catch((e) => {
+                    console.warn('Autoplay engellendi, kullanıcı etkileşimi gerekebilir:', e);
+                });
+                if ('vibrate' in navigator) navigator.vibrate([300, 200, 300]);
+            } catch (e) {
+                console.warn('Ringtone play error:', e);
+            }
+        } else {
+            el.pause();
+            el.currentTime = 0;
+            if ('vibrate' in navigator) navigator.vibrate(0);
+        }
+    }, [incomingCall]);
     useEffect(() => {
         const token = localStorage.getItem("token");
 
@@ -68,8 +90,16 @@ const CallSignalListener: React.FC = () => {
             unsubscribeFromSignal();
         };
     }, [profile?.userMail]);
+    const stopRingtone = () => {
+        if (ringtoneRef.current) {
+            ringtoneRef.current.pause();
+            ringtoneRef.current.currentTime = 0;
+        }
+        if (navigator.vibrate) navigator.vibrate(0);
+    };
     const handleAccept = () => {
         if (incomingCall) {
+            stopRingtone();
             console.log("✅ Call accepted, navigating to:", incomingCall.from);
             setIncomingCall(null);
             router.push(`/userCall/${encodeURIComponent(incomingCall.from)}`);
@@ -77,9 +107,12 @@ const CallSignalListener: React.FC = () => {
     };
 
     const handleReject = () => {
+        stopRingtone();
         console.log("❌ Call rejected");
         setIncomingCall(null);
     };
+
+
 
     return (
         <>
@@ -97,6 +130,12 @@ const CallSignalListener: React.FC = () => {
                             </button>
                         </div>
                     </div>
+                    <audio
+                        ref={ringtoneRef}
+                        src="/sounds/ringtone.mp3"  // public/sounds/ringtone.mp3 içine koy
+                        preload="auto"
+                        playsInline
+                    />
                 </Modal>
             )}
         </>

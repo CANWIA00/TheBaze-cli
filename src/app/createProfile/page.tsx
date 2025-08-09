@@ -11,6 +11,8 @@ function Page() {
     const [birthDate, setBirthDate] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
+    const [file, setFile] = useState<File | null>(null);
+
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -23,26 +25,41 @@ function Page() {
 
         setErrorMessage('');
         const token = localStorage.getItem('token');
-
         if (!token) {
             setErrorMessage('You must be logged in to create a profile.');
             return;
         }
 
-        const profileData = {
-            fullName,
-            profilePhoto,
-            bio,
-            birthDate,
-        };
-
         try {
-            const response = await axios.post('http://localhost:8080/api/v1/profile', profileData, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+            const formData = new FormData();
+            const profileCreateRequest = { fullName, bio, birthDate }; // "YYYY-MM-DD"
+
+            // JSON part
+            formData.append(
+                'profileCreateRequest',
+                new Blob([JSON.stringify(profileCreateRequest)], { type: 'application/json' })
+            );
+
+            // Dosya part (opsiyonel)
+            if (file) {
+                // basit bir kontrol (isteğe bağlı)
+                if (!file.type.startsWith('image/')) {
+                    setErrorMessage('Please select a valid image file.');
+                    return;
+                }
+                formData.append('file', file, file.name);
+            }
+
+            const response = await axios.post(
+                'http://localhost:8080/api/v1/profile',
+                formData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        // DİKKAT: Content-Type ekleme! Axios boundary’yi kendi ayarlıyor.
+                    },
+                }
+            );
 
             setSuccessMessage('Profile created successfully!');
             setErrorMessage('');
@@ -58,6 +75,8 @@ function Page() {
             setSuccessMessage('');
         }
     };
+
+
 
     return (
         <div className="grid grid-cols-12 grid-rows-12 gap-0 bg-first h-screen">
@@ -102,13 +121,13 @@ function Page() {
 
                         <div className="w-full mb-4">
                             <input
-                                type="text"
+                                type="file"
+                                accept="image/*"
                                 className="bg-transparent py-2 px-4 border rounded-lg focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50 w-full"
-                                placeholder="Profile Photo URL"
-                                value={profilePhoto}
-                                onChange={(e) => setProfilePhoto(e.target.value)}
+                                onChange={(e) => setFile(e.target.files?.[0] || null)}
                             />
                         </div>
+
 
                         <div className="w-full mb-4">
                             <input

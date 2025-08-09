@@ -28,6 +28,9 @@ function Page() {
             });
 
             if (response.ok) {
+                const data = await response.json(); // parse JSON
+                const token = data.token; // or whatever your backend sends
+                localStorage.setItem('token', token);
                 setSuccessMessage('Registration successful! Redirecting to login...');
                 setErrorMessage('');
                 setTimeout(() => {

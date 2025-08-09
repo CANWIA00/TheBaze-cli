@@ -7,6 +7,8 @@ import Message from "../../../components/group/Message";
 import SendMessage from "../../../components/group/SendMessage";
 import { useParams } from 'next/navigation';
 import { connectWebSocket, sendChatMessage, disconnectWebSocket, sendCallSignal, subscribeToSignal  } from "../../../lib/socket";
+import { useRouter } from 'next/navigation';
+
 
 type SignalType = 'CALL' | 'OFFER' | 'ANSWER' | 'ICE';
 
@@ -52,6 +54,8 @@ function Page() {
     const remoteAudioCallerRef = useRef<HTMLAudioElement | null>(null);
     const remoteAudioCalleeRef = useRef<HTMLAudioElement | null>(null);
     const pendingCandidates = useRef<RTCIceCandidateInit[]>([]);
+    const router = useRouter();
+
 
     const [roomId, setRoomId] = useState<string>("");
 
@@ -456,13 +460,13 @@ function Page() {
         peerRef.current?.close();
         peerRef.current = null;
 
-        // 2. Mikrofonu durdur
+
         if (localStreamRef.current) {
             localStreamRef.current.getTracks().forEach(track => track.stop());
             localStreamRef.current = null;
         }
 
-        // 3. Ses elementlerinden stream bağlantısını kopar
+
         if (remoteAudioCallerRef.current) {
             remoteAudioCallerRef.current.srcObject = null;
         }
@@ -471,7 +475,27 @@ function Page() {
             remoteAudioCalleeRef.current.srcObject = null;
         }
 
+
         console.log("🔚 Call sonlandırıldı ve kaynaklar temizlendi.");
+        let otherMail: string | undefined;
+
+        if (chatProfile) {
+            if (currentUserName === chatProfile.senderUserMail) {
+                otherMail = chatProfile.receiverUserMail;
+            } else {
+                otherMail = chatProfile.senderUserMail;
+            }
+        } else {
+            // fallback: receiverMail kullan
+            otherMail = receiverMail;
+        }
+
+        if (otherMail) {
+            router.push(`/userChat/${encodeURIComponent(otherMail)}`);
+        } else {
+            console.warn("⚠️ Karşı tarafın mail adresi belirlenemedi, ana sayfaya yönlendiriliyor.");
+            router.push('/userChat');
+        }
     };
 
 
@@ -532,16 +556,16 @@ function Page() {
                                     className="group-hover:scale-110 transition-transform"
                                 />
                             </button>
-                            <button className="hover:bg-second p-2 rounded-lg transition-all">
-                                <Image
-                                    src="/icons/screen-share.svg"
-                                    alt="screen share"
-                                    width={28}
-                                    height={28}
-                                    priority={true}
-                                    className="group-hover:scale-110 transition-transform"
-                                />
-                            </button>
+                            {/*<button className="hover:bg-second p-2 rounded-lg transition-all">*/}
+                            {/*    <Image*/}
+                            {/*        src="/icons/screen-share.svg"*/}
+                            {/*        alt="screen share"*/}
+                            {/*        width={28}*/}
+                            {/*        height={28}*/}
+                            {/*        priority={true}*/}
+                            {/*        className="group-hover:scale-110 transition-transform"*/}
+                            {/*    />*/}
+                            {/*</button>*/}
                             <button onClick={toggleMute} className="hover:bg-second p-2 rounded-lg transition-all">
                                 <Image
                                     src="/icons/microphone-off.svg"
@@ -611,8 +635,8 @@ function Page() {
 
                 <div className="sticky py-4 bottom-0 bg-first z-20 shadow-md">
                     <SendMessage onSend={handleSend} />
-                    <audio ref={remoteAudioCallerRef} autoPlay playsInline controls />
-                    <audio ref={remoteAudioCalleeRef} autoPlay playsInline controls />
+                    <audio ref={remoteAudioCallerRef} autoPlay playsInline hidden />
+                    <audio ref={remoteAudioCalleeRef} autoPlay playsInline hidden />
 
                 </div>
             </div>
